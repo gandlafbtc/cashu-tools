@@ -4,7 +4,7 @@
 
 Cashu-tools is a JavaScript library for [Cashu](https://github.com/cashubtc) wallets written in Typescript.
 
-Wallet Features:
+Features:
 
 * [x] send to lnaddress
 * [x] Faucet
