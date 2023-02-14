@@ -9,3 +9,8 @@ Features:
 * [x] send to lnaddress
 * [x] Faucet
 
+## Install
+
+```
+npm i @gandlaf21/cashu-tools
+```
