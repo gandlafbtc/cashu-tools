@@ -1,5 +1,5 @@
 import { CashuWallet, Proof } from "@gandlaf21/cashu-ts"
-import { getAmountForTokenSet } from "./utils"
+import { getAmountForTokenSet } from "./utils.js"
 
 export class Faucet {
     balance = Array<Proof>()

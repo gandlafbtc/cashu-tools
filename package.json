@@ -1,6 +1,6 @@
 {
   "name": "@gandlaf21/cashu-tools",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Advanced Cashu tools based on cashu-ts",
   "main": "dist/lib/es5/index.js",
   "module": "dist/lib/es6/index.js",
@@ -39,6 +39,6 @@
   },
   "dependencies": {
     "@gandlaf21/cashu-ts": "^0.5.0",
-    "@gandlaf21/lnurl-pay": "^2.1.1"
+    "lnurl-pay": "^2.1.1"
   }
 }
