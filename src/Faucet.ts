@@ -91,7 +91,7 @@ export class Faucet {
             return 'Success: faucet charged with '+ getAmountForTokenSet(receivedTokens) + "sats"
         } catch (error) {
             console.error(error)
-            return 'could not charge. ' + error.response.data.detail
+            return 'could not charge. ' + error?.response?.data?.detail ?? ''
         }
     }
 }
