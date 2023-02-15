@@ -1,6 +1,6 @@
 {
   "name": "@gandlaf21/cashu-tools",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Advanced Cashu tools based on cashu-ts",
   "main": "dist/lib/es5/index.js",
   "module": "dist/lib/es6/index.js",
