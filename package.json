@@ -1,44 +1,46 @@
 {
-  "name": "@gandlaf21/cashu-tools",
-  "version": "0.1.4",
-  "description": "Advanced Cashu tools based on cashu-ts",
-  "main": "dist/lib/es5/index.js",
-  "module": "dist/lib/es6/index.js",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/gandlafbtc/cashu-tools"
-  },
-  "bugs": {
-    "url": "https://github.com/gandlafbtc/cashu-tools/issues"
-  },
-  "scripts": {
-    "compile": "rm -rf dist/lib && tsc && tsc --build tsconfig.es5.json",
-    "test": "jest --coverage --maxWorkers=1",
-    "dev": "tsc --watch tsconfig.es5.json",
-    "lint": "eslint --ext .js,.ts ."
-  },
-  "keywords": [
-    "cashu"
-  ],
-  "author": "gandlaf21",
-  "license": "ISC",
-  "devDependencies": {
-    "@types/jest": "^29.2.4",
-    "@typescript-eslint/eslint-plugin": "^5.47.1",
-    "@typescript-eslint/parser": "^5.47.1",
-    "eslint": "^8.31.0",
-    "eslint-config-standard-with-typescript": "^24.0.0",
-    "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-n": "^15.6.0",
-    "eslint-plugin-promise": "^6.1.1",
-    "jest": "^29.3.1",
-    "ts-jest": "^29.0.3",
-    "ts-jest-resolver": "^2.0.0",
-    "ts-node": "^10.9.1",
-    "typescript": "^4.9.4"
-  },
-  "dependencies": {
-    "@gandlaf21/cashu-ts": "^0.5.0",
-    "lnurl-pay": "^2.1.1"
-  }
+	"name": "@gandlaf21/cashu-tools",
+	"version": "1.0.1",
+	"description": "Advanced Cashu tools based on cashu-ts",
+	"main": "dist/lib/es5/index.js",
+	"module": "dist/lib/es6/index.js",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/gandlafbtc/cashu-tools"
+	},
+	"bugs": {
+		"url": "https://github.com/gandlafbtc/cashu-tools/issues"
+	},
+	"scripts": {
+		"compile": "rm -rf dist/lib && tsc && tsc --build tsconfig.es5.json",
+		"test": "jest --coverage --maxWorkers=1",
+		"dev": "tsc --watch tsconfig.es5.json",
+		"lint": "eslint --ext .js,.ts .",
+		"format": "prettier --write ."
+	},
+	"keywords": [
+		"cashu"
+	],
+	"author": "gandlaf21",
+	"license": "ISC",
+	"devDependencies": {
+		"@types/jest": "^29.2.4",
+		"@typescript-eslint/eslint-plugin": "^5.47.1",
+		"@typescript-eslint/parser": "^5.47.1",
+		"eslint": "^8.31.0",
+		"eslint-config-standard-with-typescript": "^24.0.0",
+		"eslint-plugin-import": "^2.26.0",
+		"eslint-plugin-n": "^15.6.0",
+		"eslint-plugin-promise": "^6.1.1",
+		"jest": "^29.3.1",
+		"ts-jest": "^29.0.3",
+		"ts-jest-resolver": "^2.0.0",
+		"ts-node": "^10.9.1",
+		"typescript": "^4.9.4",
+		"prettier": "^2.8.7"
+	},
+	"dependencies": {
+		"@cashu/cashu-ts": "^0.7.0",
+		"lnurl-pay": "^2.1.1"
+	}
 }

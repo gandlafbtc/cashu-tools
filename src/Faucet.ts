@@ -1,97 +1,114 @@
-import { CashuWallet, Proof } from "@gandlaf21/cashu-ts"
-import { getAmountForTokenSet } from "./utils.js"
+import { CashuMint, CashuWallet, getDecodedToken, getEncodedToken } from '@cashu/cashu-ts';
+import { getAmountForTokenSet } from './utils';
+import { Token } from '@cashu/cashu-ts/dist/lib/es5/model/types';
 
-export class Faucet {
-    balance = Array<Proof>()
-    currentToken = Array<Proof>()
-    intervalMS: number
-    amountSatoshi: number
-    lastWithdraw: Date
-    message: string
-    wallet: CashuWallet
-    isClaimed = true
-    
-    constructor(cashuWallet: CashuWallet, intervalMS: number, amountSatoshi:number) {
-        this.wallet = cashuWallet
-        this.intervalMS = intervalMS
-        this.amountSatoshi = amountSatoshi
-        this.lastWithdraw = new Date()
-    }
+class Faucet {
+	interval: number;
+	amount: number;
+	mintWhiteList: string[] = [];
 
-    start = async () => {
-        console.log("starting faucet")
-        this.cycleNewToken()
-        setInterval(this.cycleNewToken, this.intervalMS)
-        setInterval(this.checkClaimed, 5000)
-        
-    }
+	wallets: CashuWallet[] = [];
+	currentToken: Token;
 
-    checkClaimed = async () => {
-        try {
-            if(!this.currentToken){
-                console.log('no current token')
-                return
-            }
-            const spentProofs = await this.wallet.checkProofsSpent(this.currentToken)
-            if (spentProofs.length>0) {
-                console.log('token was claimed')
-                this.isClaimed = true
-                this.lastWithdraw = new Date()  
-                this.currentToken = []            
-            }
-        } catch (error) {
-            console.log(error)
-        }
+	allTokens: Token = { token: [] };
 
-    }
+	constructor(interval: number, amount: number, mintWhitelist: string[] = []) {
+		this.amount = amount;
+		this.interval = interval;
+		this.mintWhiteList = mintWhitelist;
+	}
 
+	start() {
+		setInterval(() => {
+			try {
+				this.runInterval();
+			} catch (e) {
+				console.error('could not run interval', e);
+			}
+		}, this.interval);
+	}
 
-    cycleNewToken = async () => {
-        if(!this.isClaimed) {
-            return
-        }
-        console.log('Trying to cycle new token')
+	async runInterval() {
+		const isClaimed = await this.checkCurrentTokenClaimed();
+		if (!isClaimed) {
+			console.log('token still unclaimed');
+			return;
+		}
+		const nextWallet = this.getNextWallet();
+		if (!nextWallet) {
+			console.log('not enough balance to schedule new token');
+			return;
+		}
+		this.scheduleNewToken(nextWallet);
+	}
 
+	async checkCurrentTokenClaimed(): Promise<boolean> {
+		if (this.currentToken === undefined) {
+			return true;
+		}
+		const cashuWallet = this.wallets.find(
+			(wallet) => wallet.mint.mintUrl === this.currentToken.token[0].mint
+		);
+		const spentProofs = await cashuWallet.checkProofsSpent(this.currentToken.token[0].proofs);
+		if (spentProofs.length > 0) {
+			return true;
+		}
+		return false;
+	}
 
-        const proofsToSend = Array<Proof>()
-        this.balance.forEach(proof => {
-            if (getAmountForTokenSet(proofsToSend) >= this.amountSatoshi) {
-                // add excess proofs here?
-                return
-            }
-            proofsToSend.push(proof)
-        });
-        if (this.amountSatoshi > getAmountForTokenSet(proofsToSend)) {
-            console.log('not enough funds in faucet. charge with /charge?token={token}')
-            this.message = 'the faucet has runneth dry'
-            return
-        }
-        try {
-            this.balance = this.balance.filter(t=> !proofsToSend.includes(t))
-            const {returnChange,send} = await this.wallet.send(this.amountSatoshi, proofsToSend)
-            this.balance.push(...returnChange)
-            this.currentToken = send
-            this.isClaimed = false
-        }
-        catch (e) {
-            console.error(e)
-        }
-    }
+	getNextWallet(): CashuWallet | undefined {
+		for (const wallet of this.wallets) {
+			const amountInMint = this.allTokens.token
+				.filter((t) => t.mint === wallet.mint.mintUrl)
+				.map((t) => t.proofs)
+				.flat()
+				.reduce((acc, curr) => {
+					return acc + curr.amount;
+				}, 0);
 
-    charge = async (token: string) =>  {
-        try {
-            if (!token) {
-                return 'could not charge. No cashu token provided'
-            }
+			if (amountInMint >= this.amount) {
+				return wallet;
+			}
+		}
+		return undefined;
+	}
 
-            console.log("charging the faucet...")
-            const receivedTokens = await this.wallet.receive(token)
-            this.balance.push(...receivedTokens)
-            console.log("faucet charged")
-            return 'Success: faucet charged with '+ getAmountForTokenSet(receivedTokens) + "sats"
-        } catch (error) {
-            console.error(error)
-            return 'could not charge. ' + error?.response?.data?.detail ?? ''
-        }
-    }
+	async scheduleNewToken(wallet: CashuWallet) {
+		const tokensFromMint = this.allTokens.token.filter((t) => t.mint === wallet.mint.mintUrl);
+
+		const proofsToSend = tokensFromMint.map((t) => t.proofs).flat();
+
+		const { returnChange, send } = await wallet.send(this.amount, proofsToSend);
+		this.allTokens.token = [
+			...this.allTokens.token.filter((t) => !tokensFromMint.includes(t)),
+			{ proofs: returnChange, mint: wallet.mint.mintUrl }
+		];
+
+		this.currentToken = {
+			token: [{ proofs: send, mint: wallet.mint.mintUrl }],
+			memo: 'faucet nut deployed'
+		};
+	}
+
+	async charge(encodedToken: string): Promise<string> {
+		const token = getDecodedToken(encodedToken);
+
+		let wallet = this.wallets.find((w) => w.mint.mintUrl === token.token[0].mint);
+		if (!wallet) {
+			if (this.mintWhiteList.length > 0 && !this.mintWhiteList.includes(token.token[0].mint)) {
+				return `the mint ${token.token[0].mint} is not whitelisted`;
+			}
+			const cashuMint = new CashuMint(token.token[0].mint);
+			const keys = await cashuMint.getKeys();
+			wallet = new CashuWallet(keys, cashuMint);
+			this.wallets.push(wallet);
+		}
+		const { proofs } = await wallet.receive(getEncodedToken({ token: [token.token[0]] }));
+		this.allTokens.token.push({ proofs, mint: wallet.mint.mintUrl });
+		return `faucet charged with ${getAmountForTokenSet(proofs)} sats from mint ${
+			wallet.mint.mintUrl
+		}`;
+	}
 }
+
+export { Faucet };
